@@ -1,0 +1,168 @@
+Name: Cachemere
+Purpose: LRU O(1) Cache
+Required files: cachemere.js
+Compatibility: ECMA2015+ (uses JS Map object)
+Author: Logan Gore
+Version: 1.0.0
+Original Date: 4.13.18
+Last Updated: 4.13.18
+
+SUMMARY: Cachemere is a Least Recently Used (LRU) Cache that performs all operations in O(1) time. Its underlying data structures are linked lists and maps. Cachemere supports traditional cache functions as well as a "proxy" helper method that reduces basic use to a single function call. Once the cache is full (it has reached the specified number of items) it will evict the least recently used items.
+
+
+------------------CRASH COURSE IN CACHEMERE----------------------------------------
+
+1.) Creating an instance and using "proxyGet(key,fallback)"
+
+"proxyGet" is a method that wraps all typical cache functions into one.
+
+First, create a cache instance.
+	//Creates a cache the will hold up to 100 items
+	let cache = new Cachemere(100);
+
+
+Then, query proxyGet:
+
+	//proxyGet() gets data associated with the "key" from cache, or the "fallback" function if it's not in cache.
+	//This 'fallback' function is used to retrieve the data from the 'source' (usually whatever you would query to add to the cache).
+	//Once obtained and returned, the data is added to the cache.
+	//All subsequent calls to this method will return the cached data.
+	let cachedData = cache.proxyGet("key", ()=>{	
+		return someInefficientMethod();
+	});
+
+
+
+
+2.) Alternative to proxy get: Using traditional cache methods:
+
+let cache = new Cachemere(100);
+
+let key = "myData";
+let data = someInefficientMethod();
+
+if(cache.contains(key)){
+	return cache.getValue(key);
+}
+else{
+	cache.add(key,data);
+}
+
+
+
+
+---------------------------------METHOD EXAMPLES----------------------------------------------
+
+1. CREATING AN INSTANCE
+
+Create an instance with the size of the cache supplied in the constructor. 
+
+
+		let cache = new Cachemere(100);
+
+
+
+
+
+
+
+2. ADDING AN ITEM---"add(key, value)"--(METHOD)
+
+
+Items are added by specifying a key, which identifies the item, and a value associated with the key in the "add" method. Think of this as a property name/value for a JS object.
+
+The add method gives us this functionality:
+
+
+		cache.add("someDataKey", "This is some data..."); 
+
+
+We will be able to add up to 100 items before the cache instance automatically starts evicting the very first (least recently used) items we added.
+
+
+
+
+
+
+
+3. GETTING A VALUE FROM THE CACHE---"getValue(key)"--(METHOD)
+
+
+An item in the cache can be pulled by using the "getValue" method. This takes the key as the parameter and returns the associated/cached value. This will update the item's position in the cache, making it the most recently used and furthest away from eviction.
+
+
+		let item = cache.getValue("someDataKey"); //Returns "This is some data..."
+
+
+
+
+
+
+
+
+4. CHECKING TO SEE IF AN ITEM IS IN THE CACHE---"contains(key)"--(METHOD)
+
+
+To see if an item is still held in the cache, use the "contains" method, which takes the key as a parameter.
+
+
+		let inCache = cache.contains("someDataKey"); //True
+
+
+
+
+
+
+
+
+5. MANUALLY EVICTING (DELETING) AN ITEM FROM THE CACHE---"evict(key)"--(METHOD)
+
+When you manually evict a cache item you are saying that you no longer want anyone to get this data from the cache. This occurs, typically, when you decide that data is 'stale' or 'old' and you want the client/consumer to get fresh data. In this case, you would invalidate the cache item (evict it) and replace add the fresh data to the cache. The syntax to evict is as follows:
+
+
+		cache.evict("someDataKey");//After eviction, it returns the value of the data that was evicted: "This is some data..."
+
+
+
+
+
+
+
+
+6. CHECKING THE NUMBER OF ITEMS IN THE CACHE---"count" --(PROPERTY)
+
+To see how many items are currently in the cache, use the "count" property, which returns a number.
+
+
+		let cacheCount = cache.count;
+
+
+
+
+
+
+7. MANUALLY UPDATE AN ITEM'S POSITION----updatePosition(key)--(METHOD)
+
+THIS METHOD IS CALLED BY DEFAULT BY ALL ADD/GET OPERATIONS IN THE CACHE. YOU WILL RARELY, IF EVER NEED TO USE IT.
+
+Calling this method will automatically update the LRU position of a node, and add it to the LRU list if it doesn't exist.
+
+WARNING: DO NOT USE THIS METHOD UNLESS YOU KNOW THAT THE DATA IS ALREADY ADDED TO THE CACHE.
+
+		updatePosition(key);
+
+
+
+
+		
+
+--------------------------ADDITIONAL DOCUMENTATION------------------------------
+Cachemere class properties:
+
+size: the maximum size of the cache as set by the constructor value
+lruList: the DoublyLinkedList instance that maintains the order for the LRU cache using instances of the included Node class.
+lruMap: the map instance that maintains a key/node lookup for all nodes
+lruCache: the key/data lookup for cache data
+count: the number of items in the cache
+hits: the number of times that a call to getValue(key) returned cached data
+misses: the number of times that a call to getValue(key) returned nothing
